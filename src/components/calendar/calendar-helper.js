@@ -5,10 +5,10 @@ class CalendarHelper {
         this.options = options || {};
         this.minDate = new Date();
         this.maxDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1)); // Por defecto, el máximo es un año a partir de hoy
-        this.weekDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        this.weekDayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
         this.monthNames = [
-            'January', 'February', 'March', 'April', 'May', 'June', 
-            'July', 'August', 'September', 'October', 'November', 'December'
+            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
         ];
         this.startWeekDay = 0; // Domingo por defecto
     }
@@ -33,27 +33,44 @@ class CalendarHelper {
         let buttons = [];
 
         // Encabezados de los días de la semana
-        let weekRow = this.weekDayNames.map(day => Markup.button.callback(day, `ignore`));
-        buttons.push(weekRow);
+        let weekHeaderRow = this.weekDayNames.map(day => Markup.button.callback(day, `ignore`));
+        buttons.push(weekHeaderRow);
+
+        // Añadir espacio en blanco para los días antes del primer día del mes
+        let firstDayOfWeek = startDate.getDay();
+        let currentDate = new Date(startDate);
+        let currentWeekRow = [];
+
+        // Rellenar los días en blanco antes del primer día del mes
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            currentWeekRow.push(Markup.button.callback('   ', `ignore`));
+        }
 
         // Generar botones para las fechas del mes
-        let currentDate = new Date(startDate);
         while (currentDate <= endDate) {
-            let weekRow = [];
-            for (let i = 0; i < 7; i++) {
-                if (currentDate.getMonth() === month && currentDate <= endDate) {
-                    weekRow.push(Markup.button.callback(`${currentDate.getDate()}`, `calendar-date-${currentDate.toISOString().slice(0, 10)}`));
-                } else {
-                    weekRow.push(Markup.button.callback('   ', `ignore`)); // Espacio vacío para días fuera del mes
-                }
-                currentDate.setDate(currentDate.getDate() + 1);
+            if (currentDate.getMonth() === month) {
+                currentWeekRow.push(Markup.button.callback(`${currentDate.getDate()}`, `calendar-date-${currentDate.toISOString().slice(0, 10)}`));
             }
-            buttons.push(weekRow);
+
+            if (currentWeekRow.length === 7) {
+                buttons.push(currentWeekRow);
+                currentWeekRow = [];
+            }
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        // Rellenar el resto de la última semana con espacios en blanco si es necesario
+        while (currentWeekRow.length > 0 && currentWeekRow.length < 7) {
+            currentWeekRow.push(Markup.button.callback('   ', `ignore`));
+        }
+
+        if (currentWeekRow.length > 0) {
+            buttons.push(currentWeekRow);
         }
 
         return Markup.inlineKeyboard(buttons).resize();
     }
-
     // Otros métodos...
 }
 

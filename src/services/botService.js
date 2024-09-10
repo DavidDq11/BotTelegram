@@ -1,6 +1,5 @@
 const { Telegraf, Markup, session, Scenes } = require('telegraf');
 const { Pool } = require('pg');
-const reservationHandler = require('../components/handlers/reservationHandler');
 const { reservationScene } = require('../components/scenes/reservationScene');
 const { menuScene } = require('../components/scenes/menuScene');
 const { queryScene } = require('../components/scenes/queryScene');
@@ -33,7 +32,7 @@ pool.connect((err, client, release) => {
     release();
 });
 
-const stage = new Scenes.Stage([reservationScene, menuScene ,queryScene]);
+const stage = new Scenes.Stage([reservationScene, menuScene, queryScene]);
 
 bot.use(session());
 bot.use(stage.middleware());
@@ -66,6 +65,19 @@ bot.action('help', (ctx) => {
 bot.action('menu', (ctx) => {
     ctx.reply('Accediendo al menú...');
     ctx.scene.enter('menu');
+});
+
+bot.action('start', (ctx) => {
+    console.log('Acción start activada');
+    ctx.reply('¡Bienvenido de nuevo! Por favor selecciona una opción:', startKeyboard);
+    ctx.scene.leave();  // Asegúrate de que estás saliendo de la escena actual si es necesario
+});
+
+bot.action('cancel', (ctx) => {
+    ctx.reply('Reserva cancelada. Si deseas hacer una nueva reserva, puedes empezar de nuevo:', Markup.inlineKeyboard([
+        [Markup.button.callback('Hacer una nueva reserva', 'start')]
+    ]).resize());
+    ctx.scene.leave();  // Sal de la escena después de cancelar
 });
 
 module.exports = bot;
