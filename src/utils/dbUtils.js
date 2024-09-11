@@ -151,5 +151,6 @@ module.exports = {
     saveReservation,
     getAvailableTimes,
     checkAvailability,
-    savePedido
+    savePedido,
+    getMenuItemsByCategory
 };

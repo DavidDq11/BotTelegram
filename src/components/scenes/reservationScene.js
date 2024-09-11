@@ -113,11 +113,11 @@ reservationScene.action(/time-(\d{2}:\d{2})/, async (ctx) => {
     } else {
         ctx.scene.state.step = 'category';
         ctx.reply('Selecciona una categoría del menú:', Markup.inlineKeyboard([
-            [Markup.button.callback('Platos fuertes', 'category-main')],
-            [Markup.button.callback('Entradas', 'category-starters')],
-            [Markup.button.callback('Bebidas', 'category-drinks')],
-            [Markup.button.callback('Postres', 'category-desserts')],
-            [Markup.button.callback('Adicionales', 'category-extras')],
+            [Markup.button.callback('Platos fuertes', 'category-Platos fuertes')],
+            [Markup.button.callback('Entradas', 'category-Entradas')],
+            [Markup.button.callback('Bebidas', 'category-Bebidas')],
+            [Markup.button.callback('Postres', 'category-Postres')],
+            [Markup.button.callback('Adicionales', 'category-Adicionales')],
             [Markup.button.callback('Cancelar pedido', 'cancel_order')]
         ]).resize());
     }
@@ -125,6 +125,7 @@ reservationScene.action(/time-(\d{2}:\d{2})/, async (ctx) => {
 
 reservationScene.action(/category-(.*)/, async (ctx) => {
     const category = ctx.match[1];
+    console.log(`Categoría seleccionada: ${category}`); // Agrega esto para depurar
     const menuItems = await getMenuItemsByCategory(category);
     if (menuItems.length === 0) {
         ctx.reply(`No hay productos disponibles en la categoría "${category}".`);
@@ -135,7 +136,6 @@ reservationScene.action(/category-(.*)/, async (ctx) => {
     }
     ctx.scene.state.step = 'menu';
 });
-
 reservationScene.action('cancel_order', (ctx) => {
     ctx.reply('Pedido cancelado. Si deseas hacer algo más, selecciona una opción:', Markup.inlineKeyboard([
         [Markup.button.callback('Volver al inicio', 'start')]
@@ -154,11 +154,11 @@ reservationScene.action('start', (ctx) => {
     ctx.scene.leave();
 });
 
-reservationScene.action('category-main', (ctx) => ctx.scene.enter('reservation', { step: 'category-main' }));
-reservationScene.action('category-starters', (ctx) => ctx.scene.enter('reservation', { step: 'category-starters' }));
-reservationScene.action('category-drinks', (ctx) => ctx.scene.enter('reservation', { step: 'category-drinks' }));
-reservationScene.action('category-desserts', (ctx) => ctx.scene.enter('reservation', { step: 'category-desserts' }));
-reservationScene.action('category-extras', (ctx) => ctx.scene.enter('reservation', { step: 'category-extras' }));
+reservationScene.action('category-Platos fuertes', (ctx) => ctx.scene.enter('reservation', { step: 'category-Platos fuertes' }));
+reservationScene.action('category-Entradas', (ctx) => ctx.scene.enter('reservation', { step: 'category-Entradas' }));
+reservationScene.action('category-Bebidas', (ctx) => ctx.scene.enter('reservation', { step: 'category-Bebidas' }));
+reservationScene.action('category-Postres', (ctx) => ctx.scene.enter('reservation', { step: 'category-Postres' }));
+reservationScene.action('category-Adicionales', (ctx) => ctx.scene.enter('reservation', { step: 'category-Adicionales' }));
 
 async function confirmReservation(ctx) {
     const { name, date, time, people, order } = ctx.scene.state;
