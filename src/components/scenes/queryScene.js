@@ -65,4 +65,4 @@ queryScene.action('start', (ctx) => {
     ctx.scene.leave();  // Sal de la escena después de volver al inicio
 });
 
-module.exports = { queryScene };
+module.exports = queryScene;

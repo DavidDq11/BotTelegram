@@ -15,13 +15,39 @@ menuScene.enter((ctx) => {
     ]).resize());
 });
 
-// Acción para mostrar las opciones de menú
 menuScene.action('view_menu', async (ctx) => {
     // Obtener los elementos del menú desde la base de datos
     const menuItems = await getMenuItems();
+
     if (menuItems.length > 0) {
-        const menuText = menuItems.map(item => `${item.nombre}: $${item.precio}`).join('\n');
-        ctx.reply(`Los siguientes platillos están disponibles:\n${menuText}`);
+        // Crear un objeto para agrupar los elementos del menú por categoría
+        const groupedMenu = {
+            "Platos fuertes": [],
+            "Entradas": [],
+            "Bebidas": [],
+            "Postres": [],
+            "Adicionales": []
+        };
+
+        // Agrupar los elementos del menú por categoría
+        menuItems.forEach(item => {
+            if (groupedMenu[item.categoria]) {
+                groupedMenu[item.categoria].push(`${item.nombre}: $${item.precio}`);
+            }
+        });
+
+        // Crear el texto del menú agrupado por categorías
+        let menuText = '';
+        for (const [category, items] of Object.entries(groupedMenu)) {
+            if (items.length > 0) {
+                menuText += `\n*${category}*:\n`;
+                menuText += items.join('\n');
+                menuText += '\n';
+            }
+        }
+
+        // Enviar el menú al usuario
+        ctx.replyWithMarkdown(`Los siguientes platillos están disponibles:\n${menuText}`);
     } else {
         ctx.reply('Lo siento, no hay elementos disponibles en el menú en este momento.');
     }
@@ -60,4 +86,4 @@ menuScene.on('text', async (ctx) => {
     }
 });
 
-module.exports = { menuScene };
+module.exports = menuScene;

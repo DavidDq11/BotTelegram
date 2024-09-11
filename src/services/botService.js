@@ -1,8 +1,8 @@
 const { Telegraf, Markup, session, Scenes } = require('telegraf');
 const { Pool } = require('pg');
-const { reservationScene } = require('../components/scenes/reservationScene');
-const { menuScene } = require('../components/scenes/menuScene');
-const { queryScene } = require('../components/scenes/queryScene');
+const reservationScene = require('../components/scenes/reservationScene');
+const menuScene = require('../components/scenes/menuScene');
+const queryScene = require('../components/scenes/queryScene');
 
 const getBotToken = () => {
     const token = process.env.BOT_TOKEN;

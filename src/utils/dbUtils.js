@@ -1,5 +1,3 @@
-// dbUtils.js
-
 const { Pool } = require('pg');
 require('dotenv').config();
 
@@ -18,20 +16,17 @@ const pool = new Pool({
  */
 async function getAvailableTimes(selectedDate) {
     try {
-        // Obtener todas las reservas para la fecha seleccionada
         const bookedTimesQuery = `
             SELECT hora FROM reservas WHERE fecha = $1
         `;
         const result = await pool.query(bookedTimesQuery, [selectedDate]);
         const bookedTimes = result.rows.map(row => row.hora);
 
-        // Horas disponibles en un día típico
         const allTimes = [
             '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
             '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'
         ];
 
-        // Filtrar las horas disponibles eliminando las horas ya reservadas
         const availableTimes = allTimes.filter(time => !bookedTimes.includes(time));
 
         return availableTimes;
@@ -52,17 +47,14 @@ async function checkAvailability(date, time, people) {
     const maxCapacity = 20; // Capacidad máxima permitida
 
     try {
-        // Obtener todas las reservas para la fecha y hora específicas
         const reservationsQuery = `
             SELECT num_personas FROM reservas WHERE fecha = $1 AND hora = $2
         `;
         const result = await pool.query(reservationsQuery, [date, time]);
         const reservations = result.rows;
 
-        // Sumar el número total de personas en las reservas existentes
         const totalPeople = reservations.reduce((sum, reservation) => sum + reservation.num_personas, 0);
 
-        // Verificar si agregar la nueva reserva excede la capacidad máxima
         return (totalPeople + people) <= maxCapacity;
     } catch (error) {
         console.error('Error al verificar la disponibilidad:', error);
@@ -86,6 +78,22 @@ async function getMenuItems() {
 }
 
 /**
+ * Función para obtener los elementos del menú por categoría desde la base de datos
+ * @param {string} category - La categoría por la que filtrar los elementos del menú
+ * @returns {Promise<Array>} - Lista de elementos del menú disponibles en la categoría
+ */
+async function getMenuItemsByCategory(category) {
+    try {
+        const query = 'SELECT * FROM menu WHERE categoria = $1';
+        const result = await pool.query(query, [category]);
+        return result.rows;
+    } catch (error) {
+        console.error('Error al obtener elementos del menú por categoría desde la base de datos:', error);
+        return [];
+    }
+}
+
+/**
  * Función para guardar una reserva en la base de datos
  * @param {Object} reservation - Datos de la reserva
  * @param {string} reservation.name - Nombre del usuario
@@ -97,7 +105,7 @@ async function getMenuItems() {
  */
 async function saveReservation({ name, date, time, people, id_usuario }) {
     const query = `
-        INSERT INTO reservas(nombre, fecha, hora, num_personas, id_usuario) 
+        INSERT INTO reservas(nombre, fecha, hora, num_personas, usuario_id) 
         VALUES($1, $2, $3, $4, $5) 
         RETURNING id
     `;
@@ -110,4 +118,38 @@ async function saveReservation({ name, date, time, people, id_usuario }) {
     }
 }
 
-module.exports = {pool, getMenuItems, saveReservation, getAvailableTimes, checkAvailability };
+/**
+ * Función para guardar un pedido asociado a una reserva
+ * @param {number} reservationId - ID de la reserva
+ * @param {Array} order - Array de strings con los platos pedidos
+ * @returns {Promise<void>}
+ */
+async function savePedido(reservationId, order) {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        for (const item of order) {
+            const [nombre, precio] = item.split(' - $');
+            await client.query(
+                'INSERT INTO pedidos (reserva_id, menu_id, cantidad) VALUES ($1, (SELECT id FROM menu WHERE nombre = $2), 1)',
+                [reservationId, nombre]
+            );
+        }
+        await client.query('COMMIT');
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error al guardar el pedido:', error);
+        throw error;
+    } finally {
+        client.release();
+    }
+}
+
+module.exports = {
+    pool,
+    getMenuItems,
+    saveReservation,
+    getAvailableTimes,
+    checkAvailability,
+    savePedido
+};
